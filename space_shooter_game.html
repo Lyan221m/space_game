@@ -1,0 +1,1367 @@
+//A game made by Liyan
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galactic Defender - Space Shooter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #gameCanvas {
+            display: block;
+            background: radial-gradient(circle at center, #0f0f23 0%, #050505 100%);
+            cursor: crosshair;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .ui-element {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 10px;
+            color: #00ffff;
+            font-size: 14px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        #stats {
+            top: 20px;
+            left: 20px;
+            min-width: 200px;
+        }
+
+        #levelInfo {
+            top: 20px;
+            right: 20px;
+            text-align: right;
+        }
+
+        #shop {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #00ffff;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            pointer-events: auto;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #shop h2 {
+            text-align: center;
+            color: #00ffff;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .shop-item {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .shop-item:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        .shop-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .shop-item h3 {
+            color: #00ff00;
+            margin-bottom: 5px;
+        }
+
+        .shop-item .price {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        #closeShop {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ff0000;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+        }
+
+        #gameOver h2 {
+            color: #ff0000;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        #restartBtn {
+            background: #00ff00;
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .notification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 255, 0, 0.9);
+            color: black;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+        }
+
+        #cheatConsole {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 2px solid #00ff00;
+            display: none;
+            pointer-events: auto;
+            z-index: 200;
+            font-family: 'Courier New', monospace;
+        }
+
+        #cheatOutput {
+            height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+            color: #00ff00;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        #cheatInput {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 20, 0, 0.9);
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            padding: 10px;
+            outline: none;
+        }
+
+        #cheatInput::placeholder {
+            color: #006600;
+        }
+
+        .cheat-line {
+            margin: 2px 0;
+        }
+
+        .cheat-input-line {
+            color: #ffff00;
+        }
+
+        .cheat-output-line {
+            color: #00ff00;
+        }
+
+        .cheat-error-line {
+            color: #ff4444;
+        }
+
+        .cheat-help-line {
+            color: #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div class="stars" id="stars"></div>
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui">
+            <div id="stats" class="ui-element">
+                <div>Gesundheit: <span id="health">100</span></div>
+                <div>Münzen: <span id="coins">0</span></div>
+                <div>Punkte: <span id="score">0</span></div>
+                <div>Feinde zerstört: <span id="kills">0</span></div>
+            </div>
+            
+            <div id="levelInfo" class="ui-element">
+                <div>Level: <span id="level">1</span></div>
+                <div>XP: <span id="xp">0</span>/<span id="xpNeeded">100</span></div>
+                <div>Welle: <span id="wave">1</span></div>
+                <div style="margin-top: 10px; color: #ffff00;">Drücke S für Shop</div>
+            </div>
+        </div>
+
+        <div id="shop">
+            <h2>🚀 Galaktischer Shop 🚀</h2>
+            <div id="shopItems"></div>
+            <button id="closeShop">Shop schließen</button>
+        </div>
+
+        <div id="gameOver">
+            <h2>💀 GAME OVER 💀</h2>
+            <div id="finalStats"></div>
+            <button id="restartBtn">Neu starten</button>
+        </div>
+
+        <div id="notification" class="notification"></div>
+
+        <div id="cheatConsole">
+            <div id="cheatOutput"></div>
+            <input type="text" id="cheatInput" placeholder="Gib einen Cheat-Befehl ein... (Tipp: 'help' für alle Befehle)" autocomplete="off">
+        </div>
+
+        <div class="controls">
+            WASD/Pfeiltasten: Bewegen | Maus: Zielen & Schießen | S: Shop | ESC: Pause 
+    </div>
+
+    <script>
+        // Spiel-Klassen und Logik
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resizeCanvas();
+                
+                // Spiel-Status
+                this.player = new Player(this.canvas.width / 2, this.canvas.height - 100);
+                this.bullets = [];
+                this.enemies = [];
+                this.coins = [];
+                this.particles = [];
+                this.powerUps = [];
+                
+                // Game State
+                this.gameState = 'playing'; // playing, paused, gameOver
+                this.score = 0;
+                this.wave = 1;
+                this.enemiesKilled = 0;
+                this.waveEnemiesRemaining = 5;
+                
+                // Input
+                this.keys = {};
+                this.mousePos = {x: 0, y: 0};
+                this.lastShot = 0;
+                
+                // Shop
+                this.shopOpen = false;
+                this.shopItems = this.initShopItems();
+                
+                // Cheat Console
+                this.cheatConsoleOpen = false;
+                this.cheatHistory = [];
+                this.cheatCommands = this.initCheatCommands();
+                
+                this.initEventListeners();
+                this.createStars();
+                this.updateUI();
+                this.gameLoop();
+            }
+            
+            toggleCheatConsole() {
+                this.cheatConsoleOpen = !this.cheatConsoleOpen;
+                const consoleElement = document.getElementById('cheatConsole');
+                const inputElement = document.getElementById('cheatInput');
+                
+                if (this.cheatConsoleOpen) {
+                    this.gameState = 'paused';
+                    consoleElement.style.display = 'block';
+                    inputElement.focus();
+                    
+                    if (this.cheatHistory.length === 0) {
+                        this.addCheatOutput('=== CHEAT KONSOLE AKTIVIERT ===', 'help');
+                        this.addCheatOutput('Gib "help" ein für alle verfügbaren Befehle', 'help');
+                    }
+                } else {
+                    consoleElement.style.display = 'none';
+                    if (!this.shopOpen) {
+                        this.gameState = 'playing';
+                    }
+                }
+            }
+            
+            addCheatOutput(text, type = 'output') {
+                const output = document.getElementById('cheatOutput');
+                const line = document.createElement('div');
+                line.className = `cheat-line cheat-${type}-line`;
+                line.textContent = text;
+                output.appendChild(line);
+                output.scrollTop = output.scrollHeight;
+            }
+            
+            executeCheat() {
+                const input = document.getElementById('cheatInput');
+                const command = input.value.trim().toLowerCase();
+                
+                if (command === '') return;
+                
+                this.addCheatOutput(`> ${command}`, 'input');
+                this.cheatHistory.push(command);
+                
+                const parts = command.split(' ');
+                const cmd = parts[0];
+                const args = parts.slice(1);
+                
+                if (this.cheatCommands[cmd]) {
+                    try {
+                        this.cheatCommands[cmd].execute(args);
+                    } catch (error) {
+                        this.addCheatOutput(`Fehler: ${error.message}`, 'error');
+                    }
+                } else {
+                    this.addCheatOutput(`Unbekannter Befehl: ${cmd}. Gib "help" ein für alle Befehle.`, 'error');
+                }
+                
+                input.value = '';
+                this.updateUI();
+            }
+            
+            initCheatCommands() {
+                return {
+                    'help': {
+                        description: 'Zeigt alle verfügbaren Befehle',
+                        execute: () => {
+                            this.addCheatOutput('=== CHEAT BEFEHLE ===', 'help');
+                            Object.keys(this.cheatCommands).forEach(cmd => {
+                                this.addCheatOutput(`${cmd} - ${this.cheatCommands[cmd].description}`, 'help');
+                            });
+                        }
+                    },
+                    'god': {
+                        description: 'Macht dich unverwundbar',
+                        execute: () => {
+                            this.player.godMode = !this.player.godMode;
+                            this.addCheatOutput(`God Mode: ${this.player.godMode ? 'AN' : 'AUS'}`);
+                        }
+                    },
+                    'money': {
+                        description: 'Gibt 1000 Münzen (oder "money X" für X Münzen)',
+                        execute: (args) => {
+                            const amount = args[0] ? parseInt(args[0]) : 1000;
+                            this.player.coins += amount;
+                            this.addCheatOutput(`+${amount} Münzen erhalten`);
+                        }
+                    },
+                    'health': {
+                        description: 'Stellt Gesundheit vollständig wieder her',
+                        execute: () => {
+                            this.player.health = this.player.maxHealth;
+                            this.addCheatOutput('Gesundheit wiederhergestellt');
+                        }
+                    },
+                    'level': {
+                        description: 'Setzt Level auf X ("level 10")',
+                        execute: (args) => {
+                            if (args[0]) {
+                                const newLevel = parseInt(args[0]);
+                                this.player.level = Math.max(1, newLevel);
+                                this.player.xp = 0;
+                                this.addCheatOutput(`Level auf ${this.player.level} gesetzt`);
+                            } else {
+                                this.addCheatOutput('Verwendung: level <nummer>', 'error');
+                            }
+                        }
+                    },
+                    'wave': {
+                        description: 'Springt zu Welle X ("wave 10")',
+                        execute: (args) => {
+                            if (args[0]) {
+                                const newWave = parseInt(args[0]);
+                                this.wave = Math.max(1, newWave);
+                                this.waveEnemiesRemaining = 0;
+                                this.enemies = [];
+                                this.addCheatOutput(`Zu Welle ${this.wave} gesprungen`);
+                            } else {
+                                this.addCheatOutput('Verwendung: wave <nummer>', 'error');
+                            }
+                        }
+                    },
+                    'speed': {
+                        description: 'Erhöht Geschwindigkeit um Faktor X ("speed 2")',
+                        execute: (args) => {
+                            const factor = args[0] ? parseFloat(args[0]) : 2;
+                            this.player.speed *= factor;
+                            this.addCheatOutput(`Geschwindigkeit um ${factor}x erhöht`);
+                        }
+                    },
+                    'damage': {
+                        description: 'Erhöht Schaden um X ("damage 100")',
+                        execute: (args) => {
+                            const amount = args[0] ? parseInt(args[0]) : 100;
+                            this.player.damage += amount;
+                            this.addCheatOutput(`Schaden um ${amount} erhöht`);
+                        }
+                    },
+                    'firerate': {
+                        description: 'Setzt Feuerrate auf X ms ("firerate 50")',
+                        execute: (args) => {
+                            const rate = args[0] ? parseInt(args[0]) : 50;
+                            this.player.fireRate = Math.max(10, rate);
+                            this.addCheatOutput(`Feuerrate auf ${rate}ms gesetzt`);
+                        }
+                    },
+                    'multishot': {
+                        description: 'Setzt Mehrfachschuss auf X ("multishot 5")',
+                        execute: (args) => {
+                            const shots = args[0] ? parseInt(args[0]) : 3;
+                            this.player.multiShot = Math.max(0, shots);
+                            this.addCheatOutput(`Mehrfachschuss auf ${shots} gesetzt`);
+                        }
+                    },
+                    'clear': {
+                        description: 'Leert die Konsole',
+                        execute: () => {
+                            document.getElementById('cheatOutput').innerHTML = '';
+                            this.addCheatOutput('Konsole geleert');
+                        }
+                    },
+                    'killall': {
+                        description: 'Zerstört alle Feinde',
+                        execute: () => {
+                            const count = this.enemies.length;
+                            this.enemies.forEach(enemy => {
+                                this.enemyDestroyed(enemy);
+                            });
+                            this.enemies = [];
+                            this.addCheatOutput(`${count} Feinde zerstört`);
+                        }
+                    },
+                    'noclip': {
+                        description: 'Aktiviert/Deaktiviert Kollision',
+                        execute: () => {
+                            this.player.noclip = !this.player.noclip;
+                            this.addCheatOutput(`Noclip: ${this.player.noclip ? 'AN' : 'AUS'}`);
+                        }
+                    },
+                    'maxupgrades': {
+                        description: 'Maxiert alle Shop-Upgrades',
+                        execute: () => {
+                            this.shopItems.forEach(item => {
+                                while (item.currentLevel < item.maxLevel) {
+                                    item.currentLevel++;
+                                    item.effect();
+                                }
+                            });
+                            this.addCheatOutput('Alle Upgrades maxiert');
+                        }
+                    }
+                };
+            }
+            
+            resizeCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            
+            initShopItems() {
+                return [
+                    {
+                        id: 'fireRate',
+                        name: 'Schnellfeuer',
+                        description: 'Erhöht die Feuerrate um 20%',
+                        price: 50,
+                        maxLevel: 5,
+                        currentLevel: 0,
+                        effect: () => this.player.fireRate *= 0.8
+                    },
+                    {
+                        id: 'damage',
+                        name: 'Mehr Schaden',
+                        description: 'Erhöht den Schaden um 25%',
+                        price: 75,
+                        maxLevel: 5,
+                        currentLevel: 0,
+                        effect: () => this.player.damage += 25
+                    },
+                    {
+                        id: 'health',
+                        name: 'Gesundheit',
+                        description: 'Stellt Gesundheit vollständig wieder her',
+                        price: 100,
+                        maxLevel: 999,
+                        currentLevel: 0,
+                        effect: () => this.player.health = this.player.maxHealth
+                    },
+                    {
+                        id: 'maxHealth',
+                        name: 'Max Gesundheit',
+                        description: 'Erhöht maximale Gesundheit um 25',
+                        price: 150,
+                        maxLevel: 10,
+                        currentLevel: 0,
+                        effect: () => {
+                            this.player.maxHealth += 25;
+                            this.player.health = this.player.maxHealth;
+                        }
+                    },
+                    {
+                        id: 'speed',
+                        name: 'Geschwindigkeit',
+                        description: 'Erhöht Bewegungsgeschwindigkeit um 15%',
+                        price: 60,
+                        maxLevel: 5,
+                        currentLevel: 0,
+                        effect: () => this.player.speed *= 1.15
+                    },
+                    {
+                        id: 'multiShot',
+                        name: 'Mehrfachschuss',
+                        description: 'Schießt zusätzliche Projektile',
+                        price: 200,
+                        maxLevel: 3,
+                        currentLevel: 0,
+                        effect: () => this.player.multiShot++
+                    }
+                ];
+            }
+            
+            initEventListeners() {
+                // Tastatur
+                window.addEventListener('keydown', (e) => {
+                    this.keys[e.key.toLowerCase()] = true;
+                    
+                    if (e.key.toLowerCase() === 's' && this.gameState === 'playing') {
+                        this.toggleShop();
+                    }
+                    if (e.key === 'Escape') {
+                        if (this.shopOpen) {
+                            this.toggleShop();
+                        } else if (this.cheatConsoleOpen) {
+                            this.toggleCheatConsole();
+                        } else {
+                            this.gameState = this.gameState === 'paused' ? 'playing' : 'paused';
+                        }
+                    }
+                    if (e.key === '`' || e.key === '+') {
+                        this.toggleCheatConsole();
+                    }
+                });
+                
+                window.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                });
+                
+                // Maus
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.mousePos.x = e.clientX - rect.left;
+                    this.mousePos.y = e.clientY - rect.top;
+                });
+                
+                this.canvas.addEventListener('mousedown', (e) => {
+                    if (this.gameState === 'playing') {
+                        this.keys.shoot = true;
+                    }
+                });
+                
+                this.canvas.addEventListener('mouseup', (e) => {
+                    this.keys.shoot = false;
+                });
+                
+                // Shop Events
+                document.getElementById('closeShop').addEventListener('click', () => {
+                    this.toggleShop();
+                });
+                
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.restart();
+                });
+                
+                // Cheat Console Events
+                document.getElementById('cheatInput').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.executeCheat();
+                    }
+                });
+                
+                // Resize
+                window.addEventListener('resize', () => {
+                    this.resizeCanvas();
+                });
+            }
+            
+            createStars() {
+                const starsContainer = document.getElementById('stars');
+                for (let i = 0; i < 100; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.top = Math.random() * 100 + '%';
+                    star.style.width = Math.random() * 3 + 1 + 'px';
+                    star.style.height = star.style.width;
+                    star.style.animationDelay = Math.random() * 2 + 's';
+                    starsContainer.appendChild(star);
+                }
+            }
+            
+            toggleShop() {
+                this.shopOpen = !this.shopOpen;
+                const shopElement = document.getElementById('shop');
+                
+                if (this.shopOpen) {
+                    this.gameState = 'paused';
+                    shopElement.style.display = 'block';
+                    this.updateShop();
+                } else {
+                    this.gameState = 'playing';
+                    shopElement.style.display = 'none';
+                }
+            }
+            
+            updateShop() {
+                const shopItemsContainer = document.getElementById('shopItems');
+                shopItemsContainer.innerHTML = '';
+                
+                this.shopItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'shop-item';
+                    
+                    const canAfford = this.player.coins >= item.price;
+                    const maxedOut = item.currentLevel >= item.maxLevel;
+                    
+                    if (!canAfford || maxedOut) {
+                        div.classList.add('disabled');
+                    }
+                    
+                    div.innerHTML = `
+                        <h3>${item.name} (${item.currentLevel}/${item.maxLevel})</h3>
+                        <p>${item.description}</p>
+                        <p class="price">💰 ${item.price} Münzen</p>
+                        ${maxedOut ? '<p style="color: #ff0000;">MAXIMAL</p>' : ''}
+                    `;
+                    
+                    if (canAfford && !maxedOut) {
+                        div.addEventListener('click', () => {
+                            this.buyItem(item);
+                        });
+                    }
+                    
+                    shopItemsContainer.appendChild(div);
+                });
+            }
+            
+            buyItem(item) {
+                if (this.player.coins >= item.price && item.currentLevel < item.maxLevel) {
+                    this.player.coins -= item.price;
+                    item.currentLevel++;
+                    item.price = Math.floor(item.price * 1.5); // Preis steigt
+                    item.effect();
+                    
+                    this.showNotification(`${item.name} gekauft!`);
+                    this.updateShop();
+                    this.updateUI();
+                }
+            }
+            
+            showNotification(text) {
+                const notification = document.getElementById('notification');
+                notification.textContent = text;
+                notification.style.display = 'block';
+                
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 2000);
+            }
+            
+            spawnEnemies() {
+                if (this.waveEnemiesRemaining <= 0 && this.enemies.length === 0) {
+                    // Neue Welle
+                    this.wave++;
+                    this.waveEnemiesRemaining = 5 + this.wave * 2;
+                    this.showNotification(`Welle ${this.wave}!`);
+                }
+                
+                if (this.enemies.length < 8 && this.waveEnemiesRemaining > 0 && Math.random() < 0.02) {
+                    const x = Math.random() * this.canvas.width;
+                    const enemy = new Enemy(x, -50, this.wave);
+                    this.enemies.push(enemy);
+                    this.waveEnemiesRemaining--;
+                }
+            }
+            
+            update() {
+                if (this.gameState !== 'playing') return;
+                
+                // Spieler Update
+                this.player.update(this.keys, this.mousePos, this.canvas);
+                
+                // Schießen
+                if (this.keys.shoot && Date.now() - this.lastShot > this.player.fireRate) {
+                    this.shoot();
+                    this.lastShot = Date.now();
+                }
+                
+                // Feinde spawnen
+                this.spawnEnemies();
+                
+                // Updates
+                this.bullets.forEach(bullet => bullet.update());
+                this.enemies.forEach(enemy => enemy.update(this.player));
+                this.coins.forEach(coin => coin.update());
+                this.particles.forEach(particle => particle.update());
+                this.powerUps.forEach(powerUp => powerUp.update());
+                
+                // Kollisionen
+                this.checkCollisions();
+                
+                // Cleanup
+                this.bullets = this.bullets.filter(bullet => !bullet.toDelete);
+                this.enemies = this.enemies.filter(enemy => !enemy.toDelete);
+                this.coins = this.coins.filter(coin => !coin.toDelete);
+                this.particles = this.particles.filter(particle => !particle.toDelete);
+                this.powerUps = this.powerUps.filter(powerUp => !powerUp.toDelete);
+                
+                // Game Over Check
+                if (this.player.health <= 0) {
+                    this.gameOver();
+                }
+                
+                this.updateUI();
+            }
+            
+            shoot() {
+                const angle = Math.atan2(this.mousePos.y - this.player.y, this.mousePos.x - this.player.x);
+                
+                if (this.player.multiShot === 0) {
+                    this.bullets.push(new Bullet(this.player.x, this.player.y, angle, this.player.damage, true));
+                } else {
+                    // Mehrfachschuss
+                    const spreadAngle = 0.3;
+                    const shots = this.player.multiShot + 1;
+                    
+                    for (let i = 0; i < shots; i++) {
+                        const offsetAngle = angle + (i - shots/2 + 0.5) * spreadAngle;
+                        this.bullets.push(new Bullet(this.player.x, this.player.y, offsetAngle, this.player.damage, true));
+                    }
+                }
+            }
+            
+            checkCollisions() {
+                // Spieler-Projektile vs Feinde
+                this.bullets.forEach(bullet => {
+                    if (bullet.isPlayerBullet) {
+                        this.enemies.forEach(enemy => {
+                            if (this.checkCollision(bullet, enemy)) {
+                                bullet.toDelete = true;
+                                enemy.takeDamage(bullet.damage);
+                                
+                                // Partikel-Effekt
+                                this.createParticles(enemy.x, enemy.y, '#ff4444', 5);
+                                
+                                if (enemy.health <= 0) {
+                                    this.enemyDestroyed(enemy);
+                                }
+                            }
+                        });
+                    }
+                });
+                
+                // Feind-Projektile vs Spieler
+                this.bullets.forEach(bullet => {
+                    if (!bullet.isPlayerBullet && this.checkCollision(bullet, this.player)) {
+                        bullet.toDelete = true;
+                        this.player.takeDamage(bullet.damage);
+                        this.createParticles(this.player.x, this.player.y, '#ffff00', 3);
+                    }
+                });
+                
+                // Spieler vs Münzen
+                this.coins.forEach(coin => {
+                    if (this.checkCollision(this.player, coin)) {
+                        coin.toDelete = true;
+                        this.player.coins += coin.value;
+                        this.createParticles(coin.x, coin.y, '#ffff00', 3);
+                    }
+                });
+                
+                // Spieler vs Feinde (Kollision)
+                if (!this.player.noclip) {
+                    this.enemies.forEach(enemy => {
+                        if (this.checkCollision(this.player, enemy)) {
+                            this.player.takeDamage(20);
+                            enemy.takeDamage(50);
+                            this.createParticles(enemy.x, enemy.y, '#ff0000', 8);
+                            
+                            if (enemy.health <= 0) {
+                                this.enemyDestroyed(enemy);
+                            }
+                        }
+                    });
+                }
+            }
+            
+            checkCollision(obj1, obj2) {
+                const dx = obj1.x - obj2.x;
+                const dy = obj1.y - obj2.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < (obj1.radius || 20) + (obj2.radius || 20);
+            }
+            
+            enemyDestroyed(enemy) {
+                enemy.toDelete = true;
+                this.enemiesKilled++;
+                this.score += enemy.scoreValue;
+                this.player.xp += enemy.xpValue;
+                
+                // Münzen droppen
+                if (Math.random() < 0.7) {
+                    this.coins.push(new Coin(enemy.x, enemy.y));
+                }
+                
+                // Große Explosion
+                this.createParticles(enemy.x, enemy.y, '#ff6600', 15);
+                
+                // Level Up Check
+                this.checkLevelUp();
+            }
+            
+            checkLevelUp() {
+                const xpNeeded = this.player.level * 100;
+                if (this.player.xp >= xpNeeded) {
+                    this.player.xp -= xpNeeded;
+                    this.player.level++;
+                    this.player.maxHealth += 10;
+                    this.player.health = Math.min(this.player.health + 25, this.player.maxHealth);
+                    this.showNotification(`Level ${this.player.level}!`);
+                }
+            }
+            
+            createParticles(x, y, color, count) {
+                for (let i = 0; i < count; i++) {
+                    this.particles.push(new Particle(x, y, color));
+                }
+            }
+            
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Hintergrund-Effekte
+                this.renderBackground();
+                
+                // Game Objects
+                this.player.render(this.ctx);
+                this.bullets.forEach(bullet => bullet.render(this.ctx));
+                this.enemies.forEach(enemy => enemy.render(this.ctx));
+                this.coins.forEach(coin => coin.render(this.ctx));
+                this.particles.forEach(particle => particle.render(this.ctx));
+                this.powerUps.forEach(powerUp => powerUp.render(this.ctx));
+                
+                // Pause/Game Over Overlay
+                if (this.gameState === 'paused' && !this.shopOpen) {
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.font = '48px Courier New';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('PAUSIERT', this.canvas.width / 2, this.canvas.height / 2);
+                }
+            }
+            
+            renderBackground() {
+                // Bewegende Punkte im Hintergrund
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                for (let i = 0; i < 50; i++) {
+                    const x = (i * 37 + Date.now() * 0.01) % this.canvas.width;
+                    const y = (i * 43 + Date.now() * 0.005) % this.canvas.height;
+                    this.ctx.fillRect(x, y, 1, 1);
+                }
+            }
+            
+            updateUI() {
+                document.getElementById('health').textContent = Math.max(0, Math.floor(this.player.health));
+                document.getElementById('coins').textContent = this.player.coins;
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('kills').textContent = this.enemiesKilled;
+                document.getElementById('level').textContent = this.player.level;
+                document.getElementById('xp').textContent = this.player.xp;
+                document.getElementById('xpNeeded').textContent = this.player.level * 100;
+                document.getElementById('wave').textContent = this.wave;
+            }
+            
+            gameOver() {
+                this.gameState = 'gameOver';
+                document.getElementById('finalStats').innerHTML = `
+                    <p>Erreichte Welle: ${this.wave}</p>
+                    <p>Feinde zerstört: ${this.enemiesKilled}</p>
+                    <p>Punkte: ${this.score}</p>
+                    <p>Level: ${this.player.level}</p>
+                    <p>Gesammelte Münzen: ${this.player.coins}</p>
+                `;
+                document.getElementById('gameOver').style.display = 'block';
+            }
+            
+            restart() {
+                // Reset alles
+                this.player = new Player(this.canvas.width / 2, this.canvas.height - 100);
+                this.bullets = [];
+                this.enemies = [];
+                this.coins = [];
+                this.particles = [];
+                this.powerUps = [];
+                this.gameState = 'playing';
+                this.score = 0;
+                this.wave = 1;
+                this.enemiesKilled = 0;
+                this.waveEnemiesRemaining = 5;
+                this.shopItems = this.initShopItems();
+                
+                document.getElementById('gameOver').style.display = 'none';
+                this.updateUI();
+            }
+            
+            gameLoop() {
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        // Basis-Klasse für alle Spiel-Objekte
+        class GameObject {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 20;
+                this.toDelete = false;
+            }
+        }
+
+        // Spieler-Klasse
+        class Player extends GameObject {
+            constructor(x, y) {
+                super(x, y);
+                this.health = 100;
+                this.maxHealth = 100;
+                this.speed = 5;
+                this.coins = 0;
+                this.level = 1;
+                this.xp = 0;
+                this.damage = 50;
+                this.fireRate = 200; // Millisekunden zwischen Schüssen
+                this.multiShot = 0;
+                this.radius = 25;
+                
+                // Cheat flags
+                this.godMode = false;
+                this.noclip = false;
+            }
+            
+            update(keys, mousePos, canvas) {
+                // Bewegung
+                if (keys['w'] || keys['arrowup']) this.y -= this.speed;
+                if (keys['s'] || keys['arrowdown']) this.y += this.speed;
+                if (keys['a'] || keys['arrowleft']) this.x -= this.speed;
+                if (keys['d'] || keys['arrowright']) this.x += this.speed;
+                
+                // Grenzen
+                this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
+                this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
+            }
+            
+            takeDamage(damage) {
+                if (!this.godMode) {
+                    this.health -= damage;
+                }
+            }
+            
+            render(ctx) {
+                ctx.save();
+                
+                // Raumschiff
+                ctx.translate(this.x, this.y);
+                
+                // Hauptkörper
+                ctx.fillStyle = '#00ffff';
+                ctx.beginPath();
+                ctx.moveTo(0, -20);
+                ctx.lineTo(-15, 15);
+                ctx.lineTo(-8, 10);
+                ctx.lineTo(0, 5);
+                ctx.lineTo(8, 10);
+                ctx.lineTo(15, 15);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Cockpit
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(0, -5, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // God Mode Indicator
+                if (this.godMode) {
+                    ctx.strokeStyle = '#ffff00';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 30, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                
+                // Noclip Indicator
+                if (this.noclip) {
+                    ctx.strokeStyle = '#ff00ff';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 35, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                
+                // Triebwerke
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(-12, 12, 4, 8);
+                ctx.fillRect(8, 12, 4, 8);
+                
+                // Gesundheitsbalken
+                ctx.translate(-25, -35);
+                ctx.fillStyle = '#333';
+                ctx.fillRect(0, 0, 50, 6);
+                ctx.fillStyle = this.health > 30 ? '#00ff00' : '#ff0000';
+                ctx.fillRect(0, 0, (this.health / this.maxHealth) * 50, 6);
+                
+                ctx.restore();
+            }
+        }
+
+        // Feind-Klasse
+        class Enemy extends GameObject {
+            constructor(x, y, wave) {
+                super(x, y);
+                this.health = 50 + wave * 25;
+                this.maxHealth = this.health;
+                this.speed = 1 + wave * 0.5;
+                this.scoreValue = 10 + wave * 5;
+                this.xpValue = 15 + wave * 3;
+                this.lastShot = 0;
+                this.shootInterval = 2000 - wave * 100; // Schießt häufiger in höheren Wellen
+                this.type = Math.random() < 0.7 ? 'basic' : 'advanced';
+                this.angle = 0;
+                
+                if (this.type === 'advanced') {
+                    this.health *= 1.5;
+                    this.maxHealth = this.health;
+                    this.scoreValue *= 2;
+                    this.speed *= 0.8;
+                }
+            }
+            
+            update(player) {
+                // Bewegung zum Spieler
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 100) {
+                    this.x += (dx / distance) * this.speed;
+                    this.y += (dy / distance) * this.speed;
+                }
+                
+                this.angle += 0.02;
+                
+                // Schießen
+                if (Date.now() - this.lastShot > this.shootInterval && distance < 400) {
+                    this.shoot(player);
+                    this.lastShot = Date.now();
+                }
+                
+                // Aus dem Bildschirm entfernen
+                if (this.y > window.innerHeight + 100) {
+                    this.toDelete = true;
+                }
+            }
+            
+            shoot(player) {
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                game.bullets.push(new Bullet(this.x, this.y, angle, 25, false));
+            }
+            
+            takeDamage(damage) {
+                this.health -= damage;
+            }
+            
+            render(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                if (this.type === 'basic') {
+                    // Basis-Feind (Dreieck)
+                    ctx.fillStyle = '#ff4444';
+                    ctx.beginPath();
+                    ctx.moveTo(0, -15);
+                    ctx.lineTo(-12, 12);
+                    ctx.lineTo(12, 12);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Fortgeschrittener Feind
+                    ctx.fillStyle = '#ff00ff';
+                    ctx.fillRect(-15, -15, 30, 30);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(-5, -5, 10, 10);
+                    
+                    // Zusätzliche Waffen
+                    ctx.fillStyle = '#ff4444';
+                    ctx.fillRect(-20, -3, 10, 6);
+                    ctx.fillRect(10, -3, 10, 6);
+                }
+                
+                // Gesundheitsbalken
+                ctx.rotate(-this.angle);
+                ctx.translate(-20, -25);
+                ctx.fillStyle = '#333';
+                ctx.fillRect(0, 0, 40, 4);
+                ctx.fillStyle = this.health > this.maxHealth * 0.3 ? '#00ff00' : '#ff0000';
+                ctx.fillRect(0, 0, (this.health / this.maxHealth) * 40, 4);
+                
+                ctx.restore();
+            }
+        }
+
+        // Projektil-Klasse
+        class Bullet extends GameObject {
+            constructor(x, y, angle, damage, isPlayerBullet) {
+                super(x, y);
+                this.angle = angle;
+                this.speed = isPlayerBullet ? 12 : 8;
+                this.damage = damage;
+                this.isPlayerBullet = isPlayerBullet;
+                this.radius = 5;
+                this.life = 0;
+                this.maxLife = 120; // Frames
+            }
+            
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.life++;
+                
+                // Außerhalb des Bildschirms oder zu alt
+                if (this.x < -50 || this.x > window.innerWidth + 50 || 
+                    this.y < -50 || this.y > window.innerHeight + 50 || 
+                    this.life > this.maxLife) {
+                    this.toDelete = true;
+                }
+            }
+            
+            render(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                if (this.isPlayerBullet) {
+                    // Spieler-Projektil (Laser)
+                    ctx.fillStyle = '#00ffff';
+                    ctx.fillRect(-8, -2, 16, 4);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(-6, -1, 12, 2);
+                } else {
+                    // Feind-Projektil
+                    ctx.fillStyle = '#ff4444';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ff0000';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        // Münz-Klasse
+        class Coin extends GameObject {
+            constructor(x, y) {
+                super(x, y);
+                this.value = Math.floor(Math.random() * 10) + 5;
+                this.angle = 0;
+                this.bobOffset = Math.random() * Math.PI * 2;
+                this.radius = 10;
+                this.life = 0;
+                this.maxLife = 600; // 10 Sekunden bei 60 FPS
+            }
+            
+            update() {
+                this.angle += 0.1;
+                this.life++;
+                
+                // Sanftes auf und ab bewegen
+                this.y += Math.sin(this.life * 0.05 + this.bobOffset) * 0.5;
+                
+                if (this.life > this.maxLife) {
+                    this.toDelete = true;
+                }
+            }
+            
+            render(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                // Münze
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#ff8800';
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Glanz-Effekt
+                const alpha = (Math.sin(this.life * 0.1) + 1) * 0.5;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
+                ctx.beginPath();
+                ctx.arc(-2, -2, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        // Partikel-Klasse für Effekte
+        class Particle extends GameObject {
+            constructor(x, y, color) {
+                super(x, y);
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 10;
+                this.vy = (Math.random() - 0.5) * 10;
+                this.life = 60;
+                this.maxLife = 60;
+                this.radius = Math.random() * 3 + 1;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                this.life--;
+                
+                if (this.life <= 0) {
+                    this.toDelete = true;
+                }
+            }
+            
+            render(ctx) {
+                const alpha = this.life / this.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Spiel starten
+        let game;
+        window.addEventListener('load', () => {
+            game = new Game();
+        });
+    </script>
+</body>
+</html>
