@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<link rel="icon" href="assets/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galactic Defender - Space Shooter</title>
@@ -262,7 +263,7 @@
     </style>
 </head>
 <body>
-	<div id="gameContainer">
+    <div id="gameContainer">
         <div class="stars" id="stars"></div>
         <canvas id="gameCanvas"></canvas>
         
@@ -278,9 +279,11 @@
                 <div>Level: <span id="level">1</span></div>
                 <div>XP: <span id="xp">0</span>/<span id="xpNeeded">100</span></div>
                 <div>Welle: <span id="wave">1</span></div>
+                <div style="margin-top: 10px; color: #ffff00;">Drücke S für Shop</div>
             </div>
         </div>
-		    <div id="shop">
+
+        <div id="shop">
             <h2>🚀 Galaktischer Shop 🚀</h2>
             <div id="shopItems"></div>
             <button id="closeShop">Shop schließen</button>
@@ -300,7 +303,7 @@
         </div>
 
         <div class="controls">
-            WASD/Pfeiltasten: Bewegen | Maus: Zielen & Schießen | k: Shop | ESC: Pause 
+            WASD/Pfeiltasten: Bewegen | Maus: Zielen & Schießen | S: Shop | ESC: Pause 
     </div>
 
     <script>
@@ -310,7 +313,7 @@
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.resizeCanvas();
-                // A game made by Liyan
+                
                 // Spiel-Status
                 this.player = new Player(this.canvas.width / 2, this.canvas.height - 100);
                 this.bullets = [];
@@ -608,7 +611,7 @@
                 window.addEventListener('keydown', (e) => {
                     this.keys[e.key.toLowerCase()] = true;
                     
-                    if (e.key.toLowerCase() === 'k' && this.gameState === 'playing') {
+                    if (e.key.toLowerCase() === 's' && this.gameState === 'playing') {
                         this.toggleShop();
                     }
                     if (e.key === 'Escape') {
