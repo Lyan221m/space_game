@@ -279,7 +279,7 @@
                 <div>Level: <span id="level">1</span></div>
                 <div>XP: <span id="xp">0</span>/<span id="xpNeeded">100</span></div>
                 <div>Welle: <span id="wave">1</span></div>
-                <div style="margin-top: 10px; color: #ffff00;">Drücke S für Shop</div>
+                <div style="margin-top: 10px; color: #ffff00;">Drücke k für Shop</div>
             </div>
         </div>
 
@@ -303,7 +303,7 @@
         </div>
 
         <div class="controls">
-            WASD/Pfeiltasten: Bewegen | Maus: Zielen & Schießen | S: Shop | ESC: Pause 
+            WASD/Pfeiltasten: Bewegen | Maus: Zielen & Schießen | k: Shop | ESC: Pause 
     </div>
 
     <script>
@@ -611,7 +611,7 @@
                 window.addEventListener('keydown', (e) => {
                     this.keys[e.key.toLowerCase()] = true;
                     
-                    if (e.key.toLowerCase() === 's' && this.gameState === 'playing') {
+                    if (e.key.toLowerCase() === 'k' && this.gameState === 'playing') {
                         this.toggleShop();
                     }
                     if (e.key === 'Escape') {
